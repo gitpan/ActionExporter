@@ -54,8 +54,8 @@ package ActionExporter;
 require Exporter;
 our @ISA = ("Exporter");
 
-our $VERSION = '0.01';
-our $REVISION; $REVISION = '$Revision$';
+our $VERSION = '0.02';
+our $REVISION; $REVISION = '$Revision: 1.2 $';
 
 # variables changed in the caller by export_action
 # our @EXPORT_OK;
@@ -64,15 +64,23 @@ our $REVISION; $REVISION = '$Revision$';
 sub export_action{
     my ($caller,undef,undef)=caller; 
     my $action = shift;
-    my ($e,$f);
+    my ($ex_tags,$ex_ok);
     {
 	no strict;
-	$e = \%{"${caller}::EXPORT_TAGS"};
-	$f = \@{"${caller}::EXPORT_OK"};
+	$ex_tags = \%{"${caller}::EXPORT_TAGS"};
+	$ex_ok = \@{"${caller}::EXPORT_OK"};
     }
-    $e->{$action}=["$action" . '_start', "$action" . '_end'];
-    push @$f, @{ $e->{$action} };
-    push @{ $e->{allactions} }, @{ $e->{$action} };
+
+    if ($caller->can("$action" . '_start')) {
+	push @{ $ex_tags->{$action} }, ("$action" . '_start');
+    }
+    if ($caller->can("$action" . '_end')) {
+	push @{ $ex_tags->{$action} }, ("$action" . '_end');
+    }
+    if( $ex_tags->{$action} ){
+	push @$ex_ok,                     @{ $ex_tags->{$action} };
+	push @{ $ex_tags->{allactions} }, @{ $ex_tags->{$action} };
+    }
 }
 
 1;
@@ -99,6 +107,6 @@ Copyright (C) 2003, Adam Griffiths, Goldcross Technical. All Rights Reserved.
 
 This Program is free software. You may copy or redistribute it under the same terms as Perl itself.
 
-    NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 =cut
